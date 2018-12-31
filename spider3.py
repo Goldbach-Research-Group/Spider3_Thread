@@ -62,7 +62,13 @@ def catchBan(tryFun):
 
 def write(filename, startAns, totalAns):
     answersFile = open("./answers/" + filename + ".json", "w", encoding='utf-8')
-    answersFile.write("{")
+    answers = []
+    anAnswer = {
+        "answer":{},
+        "comments":{},
+        "child_comments":{}
+    }
+    # answersFile.write("{")
     for i in range(startAns, totalAns):
         # for i in range(0,1):
         # print('Get answer'+str(i)+'.json')
@@ -75,10 +81,11 @@ def write(filename, startAns, totalAns):
 
         ansJson, ansResponse = catchBan(tryansUrl)
 
-        answersFile.write("{")
+        # answersFile.write("{")
         # -------------------------ANSWER BEGIN----------------------------------
-        answersFile.write(ansResponse.text)
-        answersFile.write(",")
+        # answersFile.write(ansResponse.text)
+        anAnswer["answer"] = ansResponse.text
+        # answersFile.write(",")
         # -------------------------ANSWER END------------------------------------
 
         if ansJson['data']:
@@ -98,7 +105,7 @@ def write(filename, startAns, totalAns):
             # 0-14 for Selected Comments
             if totalCom > 0:
                 # comments body
-                answersFile.write("{")
+                # answersFile.write("{")
                 for j in range(0, totalCom):
                     # print('Get answer'+str(i)+'--comment'+str(j)+'.json')
                     comUrl2 = getComUrl(ansId, 1, j)
@@ -110,12 +117,13 @@ def write(filename, startAns, totalAns):
 
                     _, comResponse = catchBan(trycomUrl)
                     # -------------------------COMMENT BEGIN----------------------------------
-                    answersFile.write(comResponse.text)
+                    # answersFile.write(comResponse.text)
+                    anAnswer["comments"] = comResponse.text
                     # -------------------------COMMENT END------------------------------------
-                    answersFile.write(",")
+                    # answersFile.write(",")
 
                     # -------------------------CHILD BEGIN----------------------------------
-                    answersFile.write("{")
+                    # answersFile.write("{")
 
                     comJson = json.loads(comResponse.text)
                     if comJson['data']:
@@ -133,17 +141,22 @@ def write(filename, startAns, totalAns):
                                     return comJson, comResponse
 
                                 _, comResponse = catchBan(trychComUrl)
-                                answersFile.write(comResponse.text)
-                                answersFile.write(",")
-                    answersFile.write("}")
+                                # answersFile.write(comResponse.text)
+                                anAnswer["child_comments"] = comResponse.text
+                                # answersFile.write(",")
+                    # answersFile.write("}")
                     # -------------------------CHILD END------------------------------------
 
-                answersFile.write("}")
+                # answersFile.write("}")
 
         print('done answer' + str(i) + '.json')
         answersList.append(i)
-        answersFile.write("},")
-    answersFile.write("}")
+        answers.append(anAnswer)
+        # answersFile.write(json.dumps(anAnswer))
+        # answersFile.write(",")
+    # answersFile.write("}")
+
+    answersFile.write(json.dumps(answers))
     answersFile.close()
 
 
@@ -173,6 +186,7 @@ listNum = [100, 1000]
 ##Get Json
 
 i = 0
+# totalAns = 1010
 while i <= totalAns:
     # print("totalAns:" + str(totalAns))
     startAns = i
@@ -180,14 +194,13 @@ while i <= totalAns:
 
     if i <= 10:
         i = i + 2
-    elif (i > 10 and i <= 100):
+    elif (i > 10 and i < 100):
         i = i + 10
-    elif (i > 100 and i <= 1000):
+    elif (i >= 100 and i < 1000):
         i = i + 50
-    elif ((i > 1000) and (i <= totalAns)):
+    elif ((i >= 1000) and (i <= totalAns)):
         i = i + 100
-    endAns = startAns + i
-    thread.start_new_thread(write, (filename, startAns, endAns))
+    thread.start_new_thread(write, (filename, startAns, i))
 
 exitFlag = 1
 while exitFlag != 0:
